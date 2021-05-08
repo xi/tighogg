@@ -19,6 +19,13 @@ class Player:
         self.running = False
         self.weapon = '-'
 
+    def step(self):
+        if self.running:
+            if self.direction == RIGHT:
+                self.x += 1
+            else:
+                self.x -= 1
+
     def _render(self):
         if self.running:
             if self.direction == LEFT:
@@ -92,6 +99,8 @@ class Game:
             while self.running:
                 last = time.time()
                 self.on_key(boon.getch())
+                self.player1.step()
+                self.player2.step()
                 self.render()
                 time.sleep(1 / 30 - (time.time() - last))
 
