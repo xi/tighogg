@@ -8,6 +8,7 @@ LEFT = 0
 RIGHT = 1
 YELLOW = 10
 GREEN = 11
+LEVEL_WIDTH = 500
 
 
 class Player:
@@ -43,9 +44,9 @@ class Player:
                 yield r' |w'
             yield r' Λ '
 
-    def render(self):
+    def render(self, camera):
         for i, line in enumerate(self._render()):
-            x = self.x - 1 + len(line) - len(line.lstrip())
+            x = round(self.x - camera) - 1 + len(line) - len(line.lstrip())
             y = self.y - 2 + i
             boon.move(y, x)
             sys.stdout.write(
@@ -58,8 +59,8 @@ class Player:
 
 class Game:
     def __init__(self):
-        self.player1 = Player(10, 10, RIGHT, YELLOW)
-        self.player2 = Player(20, 10, LEFT, GREEN)
+        self.player1 = Player(LEVEL_WIDTH // 2 - 10, 10, RIGHT, YELLOW)
+        self.player2 = Player(LEVEL_WIDTH // 2 + 10, 10, LEFT, GREEN)
         self.players = [self.player1, self.player2]
         self.running = True
 
@@ -69,14 +70,14 @@ class Game:
 
     @property
     def position(self):
-        return self.leader.x / self.cols
+        return self.leader.x / LEVEL_WIDTH
 
-    def render_hud(self):
-        x = round(self.position * self.cols)
+    def render_hud(self, cols):
+        x = round(self.position * cols)
         if self.leader == self.player1:
-            bar = ' ' * x + '<' + '=' * (self.cols - x - 1)
+            bar = '=' * x + '>' + ' ' * (cols - x - 1)
         else:
-            bar = '=' * x + '>' + ' ' * (self.cols - x - 1)
+            bar = ' ' * x + '<' + '=' * (cols - x - 1)
         boon.move(0, 0)
         sys.stdout.write(
             boon.get_cap('setaf', self.leader.color)
@@ -85,13 +86,14 @@ class Game:
         )
 
     def render(self):
-        self.cols, self.rows = shutil.get_terminal_size()
+        cols, rows = shutil.get_terminal_size()
         sys.stdout.write(boon.get_cap('clear'))
+        camera = self.leader.x - cols / 2
 
-        self.render_hud()
+        self.render_hud(cols)
 
         for player in self.players:
-            player.render()
+            player.render(camera)
 
         sys.stdout.flush()
 
