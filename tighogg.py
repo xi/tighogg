@@ -18,6 +18,7 @@ class Player:
         self.direction = direction
         self.color = color
         self.running = False
+        self.cooldown = -1
         self.weapon = '-'
 
     def step(self):
@@ -48,6 +49,8 @@ class Player:
         for i, line in enumerate(self._render()):
             x = round(self.x - camera) - 1 + len(line) - len(line.lstrip())
             y = self.y - 2 + i
+            if x < 0:
+                continue
             boon.move(y, x)
             sys.stdout.write(
                 boon.get_cap('setaf', self.color)
@@ -69,15 +72,26 @@ class Game:
         return self.players[-1]
 
     @property
+    def straggler(self):
+        return self.players[0]
+
+    @property
     def position(self):
         return self.leader.x / LEVEL_WIDTH
 
-    def render_hud(self, cols):
-        x = round(self.position * cols)
+    @property
+    def direction(self):
         if self.leader == self.player1:
-            bar = '=' * x + '>' + ' ' * (cols - x - 1)
+            return RIGHT
         else:
-            bar = ' ' * x + '<' + '=' * (cols - x - 1)
+            return LEFT
+
+    def render_hud(self):
+        x = round(self.position * self.cols)
+        if self.direction == RIGHT:
+            bar = '=' * x + '>' + ' ' * (self.cols - x - 1)
+        else:
+            bar = ' ' * x + '<' + '=' * (self.cols - x - 1)
         boon.move(0, 0)
         sys.stdout.write(
             boon.get_cap('setaf', self.leader.color)
@@ -86,14 +100,19 @@ class Game:
         )
 
     def render(self):
-        cols, rows = shutil.get_terminal_size()
+        self.cols, self.rows = shutil.get_terminal_size()
         sys.stdout.write(boon.get_cap('clear'))
-        camera = self.leader.x - cols / 2
 
-        self.render_hud(cols)
+        if self.straggler.cooldown > 1:
+            camera = self.leader.x - self.cols / 2
+        else:
+            camera = (self.leader.x + self.straggler.x) / 2 - self.cols / 2
+
+        self.render_hud()
 
         for player in self.players:
-            player.render(camera)
+            if player.cooldown < 0:
+                player.render(camera)
 
         sys.stdout.flush()
 
@@ -124,11 +143,23 @@ class Game:
     def run(self):
         self.running = True
         with boon.fullscreen():
+            self.render()
             while self.running:
                 last = time.time()
                 self.on_key(boon.getch())
                 for player in self.players:
                     player.step()
+                    player.cooldown -= 1
+                if (
+                    self.straggler.cooldown < 0
+                    and abs(self.straggler.x - self.leader.x) > self.cols
+                ):
+                    self.straggler.cooldown = 10
+                if self.straggler.cooldown == 0:
+                    if self.direction == RIGHT:
+                        self.straggler.x = self.leader.x + self.cols / 2
+                    else:
+                        self.straggler.x = self.leader.x - self.cols / 2
                 self.render()
                 time.sleep(1 / 30 - (time.time() - last))
 
