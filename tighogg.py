@@ -15,9 +15,12 @@ class Player:
     def __init__(self, x, y, direction, color):
         self.x = x
         self.y = y
+        self.base_direction = direction
         self.direction = direction
         self.color = color
         self.running = False
+        self.cycle_duration = 3
+        self.cycle_frame = 0
         self.cooldown = -1
         self.weapon = '-'
 
@@ -27,26 +30,46 @@ class Player:
                 self.x += 1
             else:
                 self.x -= 1
+        self.cooldown -= 1
+        self.cycle_frame = (self.cycle_frame + 1) % (self.cycle_duration * 4)
+
+    def die(self):
+        self.cooldown = 30
+        self.direction = self.base_direction
+        self.running = False
 
     def _render(self):
         if self.running:
-            if self.direction == LEFT:
-                yield r'o  '
-                yield r'w\ '
-            else:
-                yield r'  o'
-                yield r' /w'
-            yield r' @ '
+            if self.cycle_frame // self.cycle_duration == 0:
+                yield r'    O /'
+                yield r'   /\/ '
+                yield r' _/\   '
+                yield r'    \  '
+            elif self.cycle_frame // self.cycle_duration == 1:
+                yield r'    O /'
+                yield r'   /\/ '
+                yield r'  _\   '
+                yield r'   |   '
+            elif self.cycle_frame // self.cycle_duration == 2:
+                yield r'    O /'
+                yield r'   /\/ '
+                yield r'   \   '
+                yield r"  /'   "
+            elif self.cycle_frame // self.cycle_duration == 3:
+                yield r'    O /'
+                yield r'   /\/ '
+                yield r'  /\   '
+                yield r" /  '  "
         else:
-            yield r' o '
-            if self.direction == LEFT:
-                yield r'w| '
-            else:
-                yield r' |w'
-            yield r' Λ '
+            yield r' \_O  /'
+            yield r'   |\/ '
+            yield r'   |\  '
+            yield r'  / |  '
 
     def render(self, camera):
         for i, line in enumerate(self._render()):
+            if self.direction == LEFT:
+                line = line[::-1].replace('/', '1').replace('\\', '/').replace('1', '\\')
             x = round(self.x - camera) - 1 + len(line) - len(line.lstrip())
             y = self.y - 2 + i
             if x < 0:
@@ -81,10 +104,7 @@ class Game:
 
     @property
     def direction(self):
-        if self.leader == self.player1:
-            return RIGHT
-        else:
-            return LEFT
+        return self.leader.base_direction
 
     def render_hud(self):
         x = round(self.position * self.cols)
@@ -147,19 +167,25 @@ class Game:
             while self.running:
                 last = time.time()
                 self.on_key(boon.getch())
+
                 for player in self.players:
                     player.step()
                     player.cooldown -= 1
+
+                # die on out-of-screen
                 if (
                     self.straggler.cooldown < 0
                     and abs(self.straggler.x - self.leader.x) > self.cols
                 ):
-                    self.straggler.cooldown = 10
+                    self.straggler.die()
+
+                # respawn on edge of screen
                 if self.straggler.cooldown == 0:
                     if self.direction == RIGHT:
                         self.straggler.x = self.leader.x + self.cols / 2
                     else:
                         self.straggler.x = self.leader.x - self.cols / 2
+
                 self.render()
                 time.sleep(1 / 30 - (time.time() - last))
 
