@@ -60,13 +60,39 @@ class Game:
     def __init__(self):
         self.player1 = Player(10, 10, RIGHT, YELLOW)
         self.player2 = Player(20, 10, LEFT, GREEN)
+        self.players = [self.player1, self.player2]
         self.running = True
 
+    @property
+    def leader(self):
+        return self.players[-1]
+
+    @property
+    def position(self):
+        return self.leader.x / self.cols
+
+    def render_hud(self):
+        x = round(self.position * self.cols)
+        if self.leader == self.player1:
+            bar = ' ' * x + '<' + '=' * (self.cols - x - 1)
+        else:
+            bar = '=' * x + '>' + ' ' * (self.cols - x - 1)
+        boon.move(0, 0)
+        sys.stdout.write(
+            boon.get_cap('setaf', self.leader.color)
+            + bar
+            + boon.get_cap('sgr0')
+        )
+
     def render(self):
-        cols, rows = shutil.get_terminal_size()
+        self.cols, self.rows = shutil.get_terminal_size()
         sys.stdout.write(boon.get_cap('clear'))
-        self.player1.render()
-        self.player2.render()
+
+        self.render_hud()
+
+        for player in self.players:
+            player.render()
+
         sys.stdout.flush()
 
     def on_key(self, key):
@@ -99,8 +125,8 @@ class Game:
             while self.running:
                 last = time.time()
                 self.on_key(boon.getch())
-                self.player1.step()
-                self.player2.step()
+                for player in self.players:
+                    player.step()
                 self.render()
                 time.sleep(1 / 30 - (time.time() - last))
 
