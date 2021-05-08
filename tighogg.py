@@ -51,7 +51,8 @@ class Game(boon.App):
         self.player2 = Player(10, 10, LEFT, GREEN)
 
     def render(self, rows, cols):
-        return self.player1.render()
+        yield from self.player1.render()
+        yield from self.player2.render()
 
     def on_key(self, key):
         if key == 'q':
@@ -66,6 +67,16 @@ class Game(boon.App):
             self.player1.direction = RIGHT
         elif key == boon.KEY_DOWN:
             self.player1.running = False
+
+        # player2
+        elif key == 'a':
+            self.player2.running = True
+            self.player2.direction = LEFT
+        elif key == 'd':
+            self.player2.running = True
+            self.player2.direction = RIGHT
+        elif key == 's':
+            self.player2.running = False
 
 
 if __name__ == '__main__':
