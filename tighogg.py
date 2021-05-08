@@ -13,42 +13,27 @@ class Player:
         self.color = color
         self.direction = LEFT
         self.running = False
-        self.ducking = False
         self.weapon = '-'
 
     def _render(self):
         if self.running:
-            if self.ducking:
-                return (
-                    r'     ',
-                    r'o_   ',
-                    r'  @  ',
-                )
+            if self.direction == LEFT:
+                yield r'o  '
+                yield r'w\ '
             else:
-                return (
-                    r'o    ',
-                    r'w\   ',
-                    r'  @  ',
-                )
-                return 'o    \n \\'
+                yield r'  o'
+                yield r' /w'
+            yield r' @ '
         else:
-            if self.ducking:
-                return (
-                    r'     ',
-                    r'  o  ',
-                    r'  Z  ',
-                )
+            yield r' o '
+            if self.direction == LEFT:
+                yield r'w| '
             else:
-                return (
-                    r'  o  ',
-                    r' w|  ',
-                    r'  Λ  ',
-                )
+                yield r' |w'
+            yield r' Λ '
 
     def render(self):
         for line in self._render():
-            if self.direction == RIGHT:
-                line = line[::-1]
             line = line.replace('w', self.weapon)
             line = (
                 boon.get_cap('setaf', self.color)
@@ -71,6 +56,16 @@ class Game(boon.App):
     def on_key(self, key):
         if key == 'q':
             self.running = False
+
+        # player1
+        elif key == boon.KEY_LEFT:
+            self.player1.running = True
+            self.player1.direction = LEFT
+        elif key == boon.KEY_RIGHT:
+            self.player1.running = True
+            self.player1.direction = RIGHT
+        elif key == boon.KEY_DOWN:
+            self.player1.running = False
 
 
 if __name__ == '__main__':
