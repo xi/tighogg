@@ -99,7 +99,17 @@ class Player:
             self.dy = -JUMP_VELOCITY
 
     def _render(self):
-        if self.running:
+        if self.dy > 0:
+            yield r' __O  /'
+            yield r'   /\/ '
+            yield r'   \\  '
+            yield r'    \\ '
+        elif self.dy < 0:
+            yield r'  _O  /'
+            yield r' / |\/ '
+            yield r' _/ \  '
+            yield r'     \ '
+        elif self.running:
             if self.cycle_frame // self.cycle_duration == 0:
                 yield r'    O /'
                 yield r'   /\/ '
