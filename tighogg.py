@@ -94,6 +94,10 @@ class Player:
         self.direction = self.base_direction
         self.running = False
 
+        if self == self.game.leader:
+            a = self.game.players.pop(0)
+            self.game.players.append(a)
+
     def jump(self):
         if self.floor == self.y:
             self.dy = -JUMP_VELOCITY
