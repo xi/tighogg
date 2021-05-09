@@ -41,12 +41,14 @@ class Map:
         return math.inf
 
     def render(self, camera, cols, rows):
+        sys.stdout.write(boon.get_cap('setaf', 7))
         for x in range(cols):
             y = self.get_floor(camera + x)
             if y is math.inf:
                 continue
             boon.move(y + rows // 2 + 1, x)
             sys.stdout.write('#')
+        sys.stdout.write(boon.get_cap('sgr0'))
 
 
 class Player:
@@ -147,6 +149,10 @@ class Player:
             yield r'  / |  '
 
     def render(self, camera, cols, rows):
+        sys.stdout.write(
+            boon.get_cap('setaf', self.color)
+            + boon.get_cap('bold')
+        )
         for i, line in enumerate(self._render()):
             if self.direction == LEFT:
                 line = (
@@ -155,17 +161,13 @@ class Player:
                     .replace('\\', '/')
                     .replace('1', '\\')
                 )
-            x = round(self.x - camera) - 3 + len(line) - len(line.lstrip())
+            x = round(self.x - camera) - 3
             y = round(self.y - 3 + i)
-            if x < 0:
-                continue
-            boon.move(y + rows // 2, x)
-            sys.stdout.write(
-                boon.get_cap('setaf', self.color)
-                + boon.get_cap('bold')
-                + line.strip()
-                + boon.get_cap('sgr0')
-            )
+            for j, c in enumerate(line):
+                if c != ' ':
+                    boon.move(y + rows // 2, x + j)
+                    sys.stdout.write(c)
+        sys.stdout.write(boon.get_cap('sgr0'))
 
 
 class Game:
