@@ -10,14 +10,27 @@ RIGHT = 1
 YELLOW = 10
 GREEN = 11
 
+BLOCK_HEIGHT = 5
+BLOCK_WIDTH = 15
+RUN_VELOCITY = 1
+GRAVITY = 0.1
+
+# x(t) = t * RUN_VELOCITY
+# y(t) = t**2 * GRAVITY / 2 - t * JUMP_VELOCITY
+# A single jump should cover BLOCK_WIDTH and BLOCK_HEIGHT
+JUMP_VELOCITY = ((BLOCK_WIDTH / RUN_VELOCITY) ** 2 * GRAVITY / 2 + BLOCK_HEIGHT) / (BLOCK_WIDTH / RUN_VELOCITY)  # noqa
+
 
 class Map:
-    def __init__(self, size=1000, s='------__ _ _-- ____---- --'):
-        self.size = size
+    def __init__(self, s='------__ _ _-- ____---- --'):
         self.s = s
 
+    @property
+    def size(self):
+        return len(self.s) * BLOCK_WIDTH * 2
+
     def get_floor(self, x):
-        k = int(abs((x / self.size * 2 - 1) * len(self.s)))
+        k = abs(round(x / BLOCK_WIDTH) - len(self.s))
         try:
             if self.s[k] == '-':
                 return 12
@@ -61,13 +74,14 @@ class Player:
     def step(self):
         if self.running:
             if self.direction == RIGHT:
-                self.x += 1
+                self.x += RUN_VELOCITY
             else:
-                self.x -= 1
+                self.x -= RUN_VELOCITY
 
         if self.floor > self.y:
-            self.dy += 0.1
+            self.dy += GRAVITY
         self.y += self.dy
+        # FIXME: auto climb
         if self.floor < self.y:
             self.dy = 0
             self.y = self.floor
@@ -82,7 +96,7 @@ class Player:
 
     def jump(self):
         if self.floor == self.y:
-            self.dy = -1
+            self.dy = -JUMP_VELOCITY
 
     def _render(self):
         if self.running:
