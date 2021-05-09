@@ -265,6 +265,13 @@ class Game:
                     player.step()
                     player.cooldown -= 1
 
+                if self.leader.base_direction == LEFT:
+                    if self.leader.x < 0:
+                        self.running = False
+                else:
+                    if self.leader.x > self.map.size:
+                        self.running = False
+
                 # die on out-of-screen
                 if abs(self.straggler.x - self.leader.x) > self.cols:
                     self.straggler.die()
