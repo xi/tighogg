@@ -267,7 +267,7 @@ class Game:
                     player.step()
                     player.cooldown -= 1
 
-                if self.leader.base_direction == LEFT:
+                if self.direction == LEFT:
                     if self.leader.x < 0:
                         self.running = False
                 else:
