@@ -62,6 +62,7 @@ class Player:
         self.cycle_duration = 3
         self.cycle_frame = 0
         self.cooldown = -1
+        self.alive = True
 
     @property
     def floor(self):
@@ -92,6 +93,9 @@ class Player:
         self.cycle_frame = (self.cycle_frame + 1) % (self.cycle_duration * 4)
 
     def die(self):
+        if not self.alive:
+            return
+        self.alive = False
         self.cooldown = 30
         self.direction = self.base_direction
         self.running = False
@@ -205,7 +209,7 @@ class Game:
         self.cols, self.rows = shutil.get_terminal_size()
         sys.stdout.write(boon.get_cap('clear'))
 
-        if self.straggler.cooldown > 1:
+        if not self.straggler.alive:
             camera = self.leader.x - self.cols / 2
         else:
             camera = (self.leader.x + self.straggler.x) / 2 - self.cols / 2
@@ -214,7 +218,7 @@ class Game:
         self.render_hud()
 
         for player in self.players:
-            if player.cooldown < 0:
+            if player.alive:
                 player.render(camera, self.cols, self.rows)
 
         sys.stdout.flush()
@@ -260,23 +264,23 @@ class Game:
                     player.cooldown -= 1
 
                 # die on out-of-screen
-                if (
-                    self.straggler.cooldown < 0
-                    and abs(self.straggler.x - self.leader.x) > self.cols
-                ):
+                if abs(self.straggler.x - self.leader.x) > self.cols:
                     self.straggler.die()
 
                 # die on abyss
                 for player in self.players:
-                    if player.cooldown < 0 and player.y > 2 * BLOCK_HEIGHT:
+                    if player.y > 2 * BLOCK_HEIGHT:
                         player.die()
 
                 # respawn on edge of screen
-                if self.straggler.cooldown == 0:
+                if not self.straggler.alive and self.straggler.cooldown <= 0:
                     if self.direction == RIGHT:
-                        self.straggler.x = self.leader.x + self.cols / 2
+                        x = self.leader.x + self.cols / 2
                     else:
-                        self.straggler.x = self.leader.x - self.cols / 2
+                        x = self.leader.x - self.cols / 2
+                    if self.map.get_floor(x) is not math.inf:
+                        self.straggler.x = x
+                        self.straggler.alive = True
 
                 self.render()
                 time.sleep(1 / 30 - (time.time() - last))
