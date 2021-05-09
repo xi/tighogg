@@ -73,15 +73,18 @@ class Player:
 
     def step(self):
         if self.running:
+            old_x = self.x
             if self.direction == RIGHT:
                 self.x += RUN_VELOCITY
             else:
                 self.x -= RUN_VELOCITY
+            if self.floor < self.y:
+                self.x = old_x
+                self.running = False
 
         if self.floor > self.y:
             self.dy += GRAVITY
         self.y += self.dy
-        # FIXME: auto climb
         if self.floor < self.y:
             self.dy = 0
             self.y = self.floor
