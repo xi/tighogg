@@ -175,6 +175,7 @@ class Game:
         self.player2 = Player(self, self.map.size // 2 + 10, 0, LEFT, GREEN)
         self.players = [self.player1, self.player2]
         self.running = True
+        self.camera = self.map.size / 2
 
     @property
     def leader(self):
@@ -213,13 +214,14 @@ class Game:
             camera = self.leader.x - self.cols / 2
         else:
             camera = (self.leader.x + self.straggler.x) / 2 - self.cols / 2
+        self.camera = (self.camera + camera) / 2
 
-        self.map.render(camera, self.cols, self.rows)
+        self.map.render(self.camera, self.cols, self.rows)
         self.render_hud()
 
         for player in self.players:
             if player.alive:
-                player.render(camera, self.cols, self.rows)
+                player.render(self.camera, self.cols, self.rows)
 
         sys.stdout.flush()
 
