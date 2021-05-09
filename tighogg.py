@@ -115,7 +115,12 @@ class Player:
     def render(self, camera):
         for i, line in enumerate(self._render()):
             if self.direction == LEFT:
-                line = line[::-1].replace('/', '1').replace('\\', '/').replace('1', '\\')
+                line = (
+                    line[::-1]
+                    .replace('/', '1')
+                    .replace('\\', '/')
+                    .replace('1', '\\')
+                )
             x = round(self.x - camera) - 1 + len(line) - len(line.lstrip())
             y = round(self.y - 3 + i)
             if x < 0:
