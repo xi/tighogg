@@ -273,7 +273,8 @@ class Game:
                         self.running = False
 
                 # die on out-of-screen
-                if abs(self.straggler.x - self.leader.x) > self.cols:
+                distance = abs(self.straggler.x - self.leader.x)
+                if distance > self.cols - 2 * BLOCK_WIDTH:
                     self.straggler.die()
 
                 # die on abyss
