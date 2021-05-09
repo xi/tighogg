@@ -260,6 +260,11 @@ class Game:
                 ):
                     self.straggler.die()
 
+                # die on abyss
+                for player in self.players:
+                    if player.cooldown < 0 and player.y > 2 * BLOCK_HEIGHT:
+                        player.die()
+
                 # respawn on edge of screen
                 if self.straggler.cooldown == 0:
                     if self.direction == RIGHT:
