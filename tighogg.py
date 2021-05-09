@@ -62,7 +62,6 @@ class Player:
         self.cycle_duration = 3
         self.cycle_frame = 0
         self.cooldown = -1
-        self.weapon = '-'
 
     @property
     def floor(self):
@@ -160,7 +159,7 @@ class Player:
             sys.stdout.write(
                 boon.get_cap('setaf', self.color)
                 + boon.get_cap('bold')
-                + line.strip().replace('w', self.weapon)
+                + line.strip()
                 + boon.get_cap('sgr0')
             )
 
