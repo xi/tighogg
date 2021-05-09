@@ -149,7 +149,7 @@ class Player:
                     .replace('\\', '/')
                     .replace('1', '\\')
                 )
-            x = round(self.x - camera) - 1 + len(line) - len(line.lstrip())
+            x = round(self.x - camera) - 3 + len(line) - len(line.lstrip())
             y = round(self.y - 3 + i)
             if x < 0:
                 continue
