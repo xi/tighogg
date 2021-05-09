@@ -1,6 +1,7 @@
 import sys
 import shutil
 import time
+import math
 
 import boon
 
@@ -8,13 +9,39 @@ LEFT = 0
 RIGHT = 1
 YELLOW = 10
 GREEN = 11
-LEVEL_WIDTH = 500
+
+
+class Map:
+    def __init__(self, size=1000, s='------__ _ _-- ____---- --'):
+        self.size = size
+        self.s = s
+
+    def get_floor(self, x):
+        k = int(abs((x / self.size * 2 - 1) * len(self.s)))
+        try:
+            if self.s[k] == '-':
+                return 12
+            elif self.s[k] == '_':
+                return 17
+        except IndexError:
+            pass
+        return math.inf
+
+    def render(self, camera, cols, rows):
+        for x in range(cols):
+            y = self.get_floor(camera + x)
+            if y is math.inf:
+                continue
+            boon.move(y + 1, x)
+            sys.stdout.write('#')
 
 
 class Player:
-    def __init__(self, x, y, direction, color):
+    def __init__(self, game, x, y, direction, color):
+        self.game = game
         self.x = x
         self.y = y
+        self.dy = 0
         self.base_direction = direction
         self.direction = direction
         self.color = color
@@ -24,12 +51,27 @@ class Player:
         self.cooldown = -1
         self.weapon = '-'
 
+    @property
+    def floor(self):
+        return min(
+            self.game.map.get_floor(self.x - 2),
+            self.game.map.get_floor(self.x + 2),
+        )
+
     def step(self):
         if self.running:
             if self.direction == RIGHT:
                 self.x += 1
             else:
                 self.x -= 1
+
+        if self.floor > self.y:
+            self.dy += 0.1
+        self.y += self.dy
+        if self.floor < self.y:
+            self.dy = 0
+            self.y = self.floor
+
         self.cooldown -= 1
         self.cycle_frame = (self.cycle_frame + 1) % (self.cycle_duration * 4)
 
@@ -37,6 +79,10 @@ class Player:
         self.cooldown = 30
         self.direction = self.base_direction
         self.running = False
+
+    def jump(self):
+        if self.floor == self.y:
+            self.dy = -1
 
     def _render(self):
         if self.running:
@@ -71,7 +117,7 @@ class Player:
             if self.direction == LEFT:
                 line = line[::-1].replace('/', '1').replace('\\', '/').replace('1', '\\')
             x = round(self.x - camera) - 1 + len(line) - len(line.lstrip())
-            y = self.y - 2 + i
+            y = round(self.y - 3 + i)
             if x < 0:
                 continue
             boon.move(y, x)
@@ -85,8 +131,9 @@ class Player:
 
 class Game:
     def __init__(self):
-        self.player1 = Player(LEVEL_WIDTH // 2 - 10, 10, RIGHT, YELLOW)
-        self.player2 = Player(LEVEL_WIDTH // 2 + 10, 10, LEFT, GREEN)
+        self.map = Map()
+        self.player1 = Player(self, self.map.size // 2 - 10, 10, RIGHT, YELLOW)
+        self.player2 = Player(self, self.map.size // 2 + 10, 10, LEFT, GREEN)
         self.players = [self.player1, self.player2]
         self.running = True
 
@@ -100,7 +147,7 @@ class Game:
 
     @property
     def position(self):
-        return self.leader.x / LEVEL_WIDTH
+        return self.leader.x / self.map.size
 
     @property
     def direction(self):
@@ -128,6 +175,7 @@ class Game:
         else:
             camera = (self.leader.x + self.straggler.x) / 2 - self.cols / 2
 
+        self.map.render(camera, self.cols, self.rows)
         self.render_hud()
 
         for player in self.players:
@@ -149,6 +197,8 @@ class Game:
             self.player1.direction = RIGHT
         elif key == boon.KEY_DOWN:
             self.player1.running = False
+        elif key == boon.KEY_UP:
+            self.player1.jump()
 
         # player2
         elif key == 'a':
@@ -159,6 +209,8 @@ class Game:
             self.player2.direction = RIGHT
         elif key == 's':
             self.player2.running = False
+        elif key == 'w':
+            self.player2.jump()
 
     def run(self):
         self.running = True
