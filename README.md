@@ -2,7 +2,8 @@
 
 This is a fighting game for the terminal inspired by
 [Nighogg](http://nidhogggame.com/). Each player's goal is to reach their and of
-the map.
+the map. It can also be played over the network by using something like
+[tmate](https://tmate.io/).
 
 ## Controls
 
