@@ -33,9 +33,9 @@ class Map:
         k = abs(round(x / BLOCK_WIDTH) - len(self.s))
         try:
             if self.s[k] == '-':
-                return 12
+                return 0
             elif self.s[k] == '_':
-                return 17
+                return BLOCK_HEIGHT
         except IndexError:
             pass
         return math.inf
@@ -45,7 +45,7 @@ class Map:
             y = self.get_floor(camera + x)
             if y is math.inf:
                 continue
-            boon.move(y + 1, x)
+            boon.move(y + rows // 2 + 1, x)
             sys.stdout.write('#')
 
 
@@ -126,7 +126,7 @@ class Player:
             yield r'   |\  '
             yield r'  / |  '
 
-    def render(self, camera):
+    def render(self, camera, cols, rows):
         for i, line in enumerate(self._render()):
             if self.direction == LEFT:
                 line = (
@@ -139,7 +139,7 @@ class Player:
             y = round(self.y - 3 + i)
             if x < 0:
                 continue
-            boon.move(y, x)
+            boon.move(y + rows // 2, x)
             sys.stdout.write(
                 boon.get_cap('setaf', self.color)
                 + boon.get_cap('bold')
@@ -151,8 +151,8 @@ class Player:
 class Game:
     def __init__(self):
         self.map = Map()
-        self.player1 = Player(self, self.map.size // 2 - 10, 10, RIGHT, YELLOW)
-        self.player2 = Player(self, self.map.size // 2 + 10, 10, LEFT, GREEN)
+        self.player1 = Player(self, self.map.size // 2 - 10, 0, RIGHT, YELLOW)
+        self.player2 = Player(self, self.map.size // 2 + 10, 0, LEFT, GREEN)
         self.players = [self.player1, self.player2]
         self.running = True
 
@@ -199,7 +199,7 @@ class Game:
 
         for player in self.players:
             if player.cooldown < 0:
-                player.render(camera)
+                player.render(camera, self.cols, self.rows)
 
         sys.stdout.flush()
 
