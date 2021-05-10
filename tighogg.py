@@ -110,7 +110,7 @@ class Player:
         if self.floor == self.y:
             self.dy = -JUMP_VELOCITY
 
-    def _render(self):
+    def _get_sprite(self):
         if self.dy > 0:
             yield r' __O  /'
             yield r'   /\/ '
@@ -148,12 +148,8 @@ class Player:
             yield r'   |\  '
             yield r'  / |  '
 
-    def render(self, camera, cols, rows):
-        sys.stdout.write(
-            boon.get_cap('setaf', self.color)
-            + boon.get_cap('bold')
-        )
-        for i, line in enumerate(self._render()):
+    def get_chars(self):
+        for i, line in enumerate(self._get_sprite()):
             if self.direction == LEFT:
                 line = (
                     line[::-1]
@@ -161,12 +157,33 @@ class Player:
                     .replace('\\', '/')
                     .replace('1', '\\')
                 )
-            x = round(self.x - camera) - 3
-            y = round(self.y - 3 + i)
             for j, c in enumerate(line):
                 if c != ' ':
-                    boon.move(y + rows // 2, x + j)
-                    sys.stdout.write(c)
+                    yield j - 3, i - 3, c
+
+    def touches(self, other):
+        if not self.alive or not other.alive:
+            return False
+        a = set(
+            (round(self.x + dx), round(self.y + dy))
+            for dx, dy, c in self.get_chars()
+        )
+        b = set(
+            (round(other.x + dx), round(other.y + dy))
+            for dx, dy, c in other.get_chars()
+        )
+        return a.intersection(b)
+
+    def render(self, camera, cols, rows):
+        sys.stdout.write(
+            boon.get_cap('setaf', self.color)
+            + boon.get_cap('bold')
+        )
+        for dx, dy, c in self.get_chars():
+            x = round(self.x + dx - camera)
+            y = round(self.y + dy) + rows // 2
+            boon.move(y, x)
+            sys.stdout.write(c)
         sys.stdout.write(boon.get_cap('sgr0'))
 
 
@@ -283,6 +300,10 @@ class Game:
                 for player in self.players:
                     if player.y > 2 * BLOCK_HEIGHT:
                         player.die()
+
+                # die on contact
+                if self.leader.touches(self.straggler):
+                    self.leader.die()
 
                 # respawn on edge of screen
                 for player in self.players:
