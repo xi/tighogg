@@ -285,14 +285,15 @@ class Game:
                         player.die()
 
                 # respawn on edge of screen
-                if not self.straggler.alive and self.straggler.cooldown <= 0:
-                    if self.direction == RIGHT:
-                        x = self.leader.x + self.cols / 2
-                    else:
-                        x = self.leader.x - self.cols / 2
-                    if self.map.get_floor(x) is not math.inf:
-                        self.straggler.x = x
-                        self.straggler.alive = True
+                for player in self.players:
+                    if not player.alive and player.cooldown <= 0:
+                        if player.base_direction == RIGHT:
+                            x = self.camera
+                        else:
+                            x = self.camera + self.cols
+                        if self.map.get_floor(x) is not math.inf:
+                            player.x = x
+                            player.alive = True
 
                 self.render()
                 time.sleep(1 / 30 - (time.time() - last))
