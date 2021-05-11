@@ -179,10 +179,10 @@ class Player:
             boon.get_cap('setaf', self.color)
             + boon.get_cap('bold')
         )
+        x0 = round(self.x - camera)
+        y0 = round(self.y + rows // 2)
         for dx, dy, c in self.get_chars():
-            x = round(self.x + dx - camera)
-            y = round(self.y + dy) + rows // 2
-            boon.move(y, x)
+            boon.move(y0 + dy, x0 + dx)
             sys.stdout.write(c)
         sys.stdout.write(boon.get_cap('sgr0'))
 
